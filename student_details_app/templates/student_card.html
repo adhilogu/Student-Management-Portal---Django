@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Student Card{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <form method="GET" action="{% url 'student_card' %}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="roll_no" class="form-control" placeholder="Enter Roll Number" value="{{ searched_roll_no }}" required>
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+    </form>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if student %}
+    <div class="card p-4 rounded" style="border: 2px solid #000F5A; border-radius: 10px; font-size: 1.4em;">
+        <h4 class="card-title" style="color: #000F5A; font-weight: bold; font-size: 35px;">{{ student.student_name }}</h4>
+        <br>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Roll No:</strong> {{ student.roll_no }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Mobile Number:</strong> {{ student.mobile_number }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Email:</strong> {{ student.student_email }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Year:</strong> {{ student.year }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Department:</strong> {{ student.department }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Faculty In-charge:</strong> {{ student.faculty_incharge }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Faculty ID:</strong> {{ student.faculty_id }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">Lab Name:</strong> {{ student.lab_name }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong style="color: #000F5A;">NIP Status:</strong> {{ student.nip_status }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+    </div>
+    {% endif %}
+
+    {% if missing_entries %}
+    <div class="alert alert-warning" role="alert">
+        The following terms were not found: {{ missing_entries|join:", " }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

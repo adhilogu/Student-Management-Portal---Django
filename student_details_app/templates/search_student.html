@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Search Students{% endblock %}
+{% block content %}
+<h2>Search Students</h2>
+<style>
+    .search-button {
+        margin-bottom: 20px; /* Adjust space below button */
+        width: 30%; /* Adjust width as needed */
+    }
+</style>
+
+<form method="get">
+    <div class="mb-3">
+        <label for="filter" class="form-label">Filter By</label>
+        <select id="filter" name="filter" class="form-select" required>
+            <option value="" {% if not filter %}selected{% endif %}>-- Select Filter --</option>
+            <option value="roll_no" {% if filter == 'roll_no' %}selected{% endif %}>Roll No</option>
+            <option value="student_name" {% if filter == 'student_name' %}selected{% endif %}>Student Name</option>
+            <option value="mobile_number" {% if filter == 'mobile_number' %}selected{% endif %}>Mobile Number</option>
+            <option value="student_email" {% if filter == 'student_email' %}selected{% endif %}>Student Email</option>
+            <option value="year" {% if filter == 'year' %}selected{% endif %}>Year</option>
+            <option value="department" {% if filter == 'department' %}selected{% endif %}>Department</option>
+            <option value="faculty_incharge" {% if filter == 'faculty_incharge' %}selected{% endif %}>Faculty Incharge</option>
+            <option value="faculty_id" {% if filter == 'faculty_id' %}selected{% endif %}>Faculty ID</option>
+            <option value="lab_name" {% if filter == 'lab_name' %}selected{% endif %}>Lab Name</option>
+            <option value="nip_status" {% if filter == 'nip_status' %}selected{% endif %}>NIP Status</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="search" class="form-label">Search</label>
+        <input type="text" id="search" name="search" class="form-control" placeholder="Enter search term" value="{{ search }}" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary search-button">Search</button>
+    <a href="{% url 'download_csv' %}?filter={{ filter }}&search={{ search }}" class="btn btn-secondary search-button">Download CSV</a>
+</form>
+
+{% if results %}
+    <h3>Results:</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Roll No</th>
+                <th>Student Name</th>
+                <th>Mobile Number</th>
+                <th>Student Email</th>
+                <th>Year</th>
+                <th>Department</th>
+                <th>Faculty Incharge</th>
+                <th>Faculty ID</th>
+                <th>Lab Name</th>
+                <th>NIP Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in results %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ student.roll_no }}</td>
+                <td>{{ student.student_name }}</td>
+                <td>{{ student.mobile_number }}</td>
+                <td>{{ student.student_email }}</td>
+                <td>{{ student.year }}</td>
+                <td>{{ student.department }}</td>
+                <td>{{ student.faculty_incharge }}</td>
+                <td>{{ student.faculty_id }}</td>
+                <td>{{ student.lab_name }}</td>
+                <td>{{ student.nip_status }}</td>
+                <td>
+                <a href="{% url 'edit_student' student.id %}">Edit</a>
+                <a href="{% url 'delete_student' student.id %}">Delete</a>
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif not search %}
+<p style="color: #000F5A; font-weight: bold; font-size: 1.5em;">Start search</p>
+{% elif not results %}
+<p style="color: red; font-weight: bold; font-size: 1.5em;">'{{ search }}' in '{{ filter }}' not found.</p>
+{% endif %}
+
+{% if missing_entries %}
+    <h3>Missing Entries:</h3>
+    <ul>
+        {% for entry in missing_entries %}
+        <li style="color: red;">{{ entry }} not found in {{ filter }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

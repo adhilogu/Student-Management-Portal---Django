@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #000F5A;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            max-width: 80%;
+            color: white;
+            text-align: center;
+        }
+        .login-container h1 {
+            margin-bottom: 1rem;
+        }
+        .login-container img {
+            width: 100px;
+            margin-bottom: 1rem;
+        }
+        .login-container form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .login-container .form-group {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .login-container .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1em;
+            color: white;
+            text-align: left;
+        }
+        .login-container .form-control {
+            width: 80%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .login-container button {
+            padding: 0.65rem;
+            border: none;
+            width: 300px;
+            border-radius: 5px;
+            background-color: lightgreen;
+            color: #000F5A;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .login-container .google-login {
+            margin-top: 0.5rem;
+            background-color: #4285F4;
+            color: white;
+        }
+        #face-unlock-container {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        #face-unlock-container button {
+            margin-top: 0.5rem;
+            background-color: #4CAF50;
+            color: white;
+        }
+        #camera-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #camera-overlay video {
+            width: 320px;
+            height: 240px;
+            border: 1px solid white;
+            border-radius: 10px;
+        }
+        #camera-overlay button {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="{% static 'images/bitlogo.png' %}" alt="Logo">
+        <h1>Login</h1>
+        <form method="post">
+            {% csrf_token %}
+            {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+            {% endif %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="form-control" required>
+            </div>
+            <button type="submit">Login</button>
+            <button type="button" class="google-login">Login with Google</button>
+        </form>
+        <div id="face-unlock-container">
+            <button id="openCameraBtn">Face Unlock</button>
+            <p id="status"></p>
+        </div>
+    </div>
+    <div id="camera-overlay">
+        <video id="video" width="320" height="240" autoplay></video>
+        <button id="closeCameraBtn">Close</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+    <script>
+        const video = document.getElementById('video');
+        const openCameraBtn = document.getElementById('openCameraBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        const status = document.getElementById('status');
+        const cameraOverlay = document.getElementById('camera-overlay');
+
+        let model;
+
+        (async function() {
+            model = await facemesh.load();
+        })();
+
+        openCameraBtn.addEventListener('click', function() {
+            cameraOverlay.style.display = 'flex';
+            startVideo();
+        });
+
+        closeCameraBtn.addEventListener('click', function() {
+            cameraOverlay.style.display = 'none';
+            stopVideo();
+        });
+
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    detectFace(); // Start detecting face
+                })
+                .catch(err => console.error('Error accessing webcam: ', err));
+        }
+
+        function stopVideo() {
+            let stream = video.srcObject;
+            if (stream) {
+                let tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            video.srcObject = null;
+            video.style.display = 'none';
+        }
+
+        async function detectFace() {
+            const predictions = await model.estimateFaces(video, false);
+            if (predictions.length > 0) {
+                unlockFace(); // Unlock if face detected
+            } else {
+                status.innerText = 'No face detected, please try again.';
+                setTimeout(detectFace, 1000); // Retry after 1 second
+            }
+        }
+
+        async function unlockFace() {
+            video.pause();  // Stop the video for capturing the frame
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            const response = await fetch('/face_unlock/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({ face_data: dataUrl })
+            });
+            const data = await response.json();
+            if (data.status === 'ok') {
+                window.location.href = data.redirect_url; // Redirect to home page
+            } else {
+                status.innerText = 'Face unlock failed';
+                video.play();  // Resume video if unlock failed
+                detectFace();  // Retry face detection
+            }
+        }
+    </script>
+</body>
+</html>

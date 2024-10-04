@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #000F5A;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+        }
+        .logo {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #444;
+        }
+        .logo img {
+            max-height: 90px;
+            max-width: 90px;
+        }
+        .menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+        .menu a {
+            display: flex;
+            align-items: center;
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+        }
+        .menu a:hover, .menu a.active {
+            background-color: #5200FF;
+            color: white;
+        }
+        .submenu {
+            padding-left: 20px;
+            display: none;
+        }
+        .submenu a {
+            padding: 10px 20px;
+        }
+        .logout {
+            padding: 15px 20px;
+            border-top: 1px solid #444;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            flex: 1;
+            background-color: #A3A6C0;
+            color: white;
+        }
+        .menu i {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="bitlogo.png" alt="Logo">
+        </div>
+        <div class="menu">
+            <a href="#" class="active"><i class="bi bi-house-door"></i>Home</a>
+            <a href="#"><i class="bi bi-person-plus"></i>Add Student Details</a>
+            <a href="#"><i class="bi bi-search"></i>Search Student Details</a>
+            <a href="#" class="dropdown-toggle"><i class="bi bi-journal"></i>PIC Labs</a>
+            <div class="submenu">
+                <a href="#">PIC Master Sheet</a>
+                <a href="#">PIC Lab</a>
+                <a href="#">PIC Action Plan</a>
+                <a href="#">PIC Lab Achievements</a>
+            </div>
+        </div>
+        <div class="logout">
+            <a href="#"><i class="bi bi-box-arrow-right"></i>Logout</a>
+        </div>
+    </div>
+    <div class="content">
+        <h1>Welcome to the PIC Dashboard</h1>
+        <p>... ... ...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var dropdownToggle = document.querySelector('.dropdown-toggle');
+            var submenu = document.querySelector('.submenu');
+            var menuItems = document.querySelectorAll('.menu a');
+
+            dropdownToggle.addEventListener('click', function() {
+                submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                dropdownToggle.classList.toggle('active');
+            });
+
+            menuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    menuItems.forEach(function(menuItem) {
+                        menuItem.classList.remove('active');
+                    });
+                    item.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

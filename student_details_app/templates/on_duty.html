@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block title %}On Duty Apply{% endblock %}
+
+{% block content %}
+
+<style>
+    .btn {
+        background-color: #000F5A;
+        color: white;
+        border: none;
+        padding: 5px 10px; /* Reduced size */
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn:hover {
+        background-color: #000A42;
+    }
+
+    .table-container {
+        overflow-x: auto; /* Allow horizontal scrolling */
+        overflow-y: auto;
+        max-height: 500px;
+        width: calc(100% - 100px); /* Adjust width to account for the side panel */
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+    }
+
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto; /* Allow table to adjust column widths */
+    }
+
+    .styled-table th, .styled-table td {
+        border: 2px solid #ddd;
+        padding: 8px;
+        word-wrap: break-word;
+        font-size: 12px; /* Adjust font size */
+        text-align: center; /* Center align text */
+    }
+
+    .styled-table th {
+        color: #000F5A;
+        text-align: center; /* Center align text */
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        font-size: 12px; /* Adjust font size */
+    }
+
+    .styled-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .styled-table tr:hover {
+        background-color: yellow;
+    }
+
+    .flatpickr-input {
+        width: 60px; /* Smaller width */
+        height: 30px; /* Smaller height */
+        font-size: 12px; /* Smaller font size */
+        padding: 5px;
+    }
+
+    .message {
+        font-weight: bold;
+        font-size: 1.5em;
+        margin-top: 10px;
+    }
+
+    .message.success {
+        color: green;
+    }
+
+    .message.error {
+        color: red;
+    }
+</style>
+
+<h1 style="font-size: 3em; color: #000F5A; font-weight: bold;">On Duty Apply</h1>
+<br>
+
+<form method="get">
+    <div class="mb-3">
+        <label style="font-size: 20px; color: #000F5A; font-weight: bold;" for="lab_name" class="form-label">Lab Name</label>
+        <select id="lab_name" name="lab_name" class="form-select" required>
+            <option value="" {% if not lab_name %}selected{% endif %}>-- Select Lab --</option>
+            {% for name in lab_names %}
+                <option value="{{ name }}" {% if lab_name == name %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label style="font-size: 20px; color: #000F5A; font-weight: bold;" for="from_date" class="form-label">From Date</label>
+        <input type="text" id="id_from_date" name="from_date" value="{{ from_date }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label style="font-size: 20px; color: #000F5A; font-weight: bold;" for="to_date" class="form-label">To Date</label>
+        <input type="text" id="id_to_date" name="to_date" value="{{ to_date }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label style="font-size: 20px; color: #000F5A; font-weight: bold;" for="purpose" class="form-label">Purpose</label>
+        <textarea id="purpose" name="purpose" class="form-control" rows="3">{{ purpose }}</textarea>
+    </div>
+    <button type="submit" class="btn">Search Students</button>
+</form>
+
+{% if success_message %}
+    <br>
+    <p class="message success">
+        {{ success_message }}
+    </p>
+{% endif %}
+
+{% if error_message %}
+    <br>
+    <p class="message error">
+        {{ error_message }}
+    </p>
+{% endif %}
+
+{% if students %}
+<br>
+<form method="post">
+    {% csrf_token %}
+    <div class="table-container">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Roll No</th>
+                    <th>Department</th>
+                    <th>Lab</th>
+                    <th>Mail ID</th>
+                    <th>Faculty Incharge</th>
+                    <th>Year</th>
+                    {% for date in date_range %}
+                        <th>{{ date }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><input type="checkbox" name="selected_students" value="{{ student.id }}"></td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ student.student_name }}</td>
+                    <td>{{ student.roll_no }}</td>
+                    <td>{{ student.department }}</td>
+                    <td>{{ student.lab_name }}</td>
+                    <td>{{ student.student_email }}</td>
+                    <td>{{ student.faculty_incharge }}</td>
+                    <td>{{ student.year }}</td>
+                    {% for date in date_range %}
+                        <td><input type="checkbox" name="{{ student.id }}_{{ date }}"></td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <input type="hidden" name="lab_name" value="{{ lab_name }}">
+    <input type="hidden" name="from_date" value="{{ from_date }}">
+    <input type="hidden" name="to_date" value="{{ to_date }}">
+    <input type="hidden" name="purpose" value="{{ purpose }}"> <!-- Include purpose as hidden field -->
+    <br>
+    <button type="submit" name="apply_on_duty" class="btn">Apply On-Duty</button>
+    <!--<button type="submit" name="generate_csv" class="btn">Generate CSV</button>-->
+</form>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr("#id_from_date", {
+            altInput: true,
+            altFormat: "j-F-Y",
+            dateFormat: "d-m-Y",
+            defaultDate: "{{ from_date }}"
+        });
+        flatpickr("#id_to_date", {
+            altInput: true,
+            altFormat: "j-F-Y",
+            dateFormat: "d-m-Y",
+            defaultDate: "{{ to_date }}"
+        });
+    });
+</script>
+
+{% endblock %}

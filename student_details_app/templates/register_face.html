@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% load static%}
+{% block content %}
+<div class="register-container">
+    <img src="{% static 'images/bitlogo.png' %}" alt="Logo">
+    <h1>Register</h1>
+    <form method="post" action="{% url 'register_face' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="hidden" name="face_data" id="face_data">
+        <button type="submit">Register</button>
+    </form>
+    <div id="face-capture-container">
+        <button id="captureFaceBtn">Capture Face</button>
+    </div>
+</div>
+<div id="camera-overlay">
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="closeCameraBtn">Close</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+<script>
+    const video = document.getElementById('video');
+    const captureFaceBtn = document.getElementById('captureFaceBtn');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const cameraOverlay = document.getElementById('camera-overlay');
+    const faceDataInput = document.getElementById('face_data');
+
+    let model;
+
+    (async function() {
+        model = await facemesh.load();
+    })();
+
+    captureFaceBtn.addEventListener('click', function() {
+        cameraOverlay.style.display = 'flex';
+        startVideo();
+    });
+
+    closeCameraBtn.addEventListener('click', function() {
+        cameraOverlay.style.display = 'none';
+        stopVideo();
+    });
+
+    function startVideo() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.style.display = 'block';
+                captureFace(); // Start capturing face
+            })
+            .catch(err => console.error('Error accessing webcam: ', err));
+    }
+
+    function stopVideo() {
+        let stream = video.srcObject;
+        if (stream) {
+            let tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        video.srcObject = null;
+        video.style.display = 'none';
+    }
+
+    async function captureFace() {
+        const predictions = await model.estimateFaces(video, false);
+        if (predictions.length > 0) {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+            faceDataInput.value = dataUrl;
+            cameraOverlay.style.display = 'none';
+            stopVideo();
+        } else {
+            setTimeout(captureFace, 1000); // Retry after 1 second
+        }
+    }
+</script>
+{% endblock %}

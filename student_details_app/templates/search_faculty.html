@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Search Faculty</h2>
+
+<form method="get">
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Search</button>
+
+</form>
+
+{% if results %}
+    <h3>Results:</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Lab Name</th>
+                <th>Lab Code</th>
+                <th>Faculty Incharges</th>
+                <th>FI</th>
+                <th>Faculty ID</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Email</th>
+                <th>Contact No</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for faculty in results %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ faculty.lab_name }}</td>
+                <td>{{ faculty.lab_code }}</td>
+                <td>{{ faculty.faculty_incharges }}</td>
+                <td>{{ faculty.fi }}</td>
+                <td>{{ faculty.faculty_id }}</td>
+                <td>{{ faculty.department }}</td>
+                <td>{{ faculty.designation }}</td>
+                <td>{{ faculty.email }}</td>
+                <td>{{ faculty.contact_no }}</td>
+                <td>
+                    <a href="{% url 'edit_faculty' faculty.id %}">Edit</a>
+                    <a href="{% url 'delete_faculty' faculty.id %}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif not search %}
+<p style="color: #000F5A; font-weight: bold; font-size: 1.5em;">Start search</p>
+{% elif not results %}
+<p style="color: red; font-weight: bold; font-size: 1.5em;">'{{ search }}' in '{{ filter }}' not found.</p>
+{% endif %}
+
+{% if missing_entries %}
+    <h3>Missing Entries:</h3>
+    <ul>
+        {% for entry in missing_entries %}
+        <li style="color: red;">{{ entry }} not found in {{ filter }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

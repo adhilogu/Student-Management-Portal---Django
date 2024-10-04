@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PIC DASHBOARD{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #000F5A;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 250px; /* Align header to the right of the sidebar */
+            width: calc(100% - 250px); /* Header width minus sidebar width */
+            z-index: 1000; /* Ensure header is above the sidebar */
+        }
+
+        .header .profile-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .profile-info img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .header .profile-info span {
+            font-weight: 600;
+        }
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .actions button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .header .actions button:hover {
+            color: #5200FF;
+        }
+
+        .search-bar {
+            margin: 15px 10px;
+        }
+
+        .sidebar {
+            width: 250px; /* Sidebar width */
+            background-color: #000F5A;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            padding-top: 60px; /* Ensure content is below the header */
+            z-index: 999; /* Ensure sidebar is below the header */
+        }
+
+
+        .sidebar.hidden {
+            transform: translateX(-270px);
+        }
+
+        .logo {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo img {
+            max-height: 100px;
+            max-width: 100px;
+        }
+
+        .menu {
+            flex: 1;
+            padding: 10px 0;
+            align-items: center;
+            padding: 0;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-radius: 8px;
+            margin: 0 10px;
+            font-weight: 400;
+        }
+
+        .menu a:hover, .menu a.active {
+            background-color: #5200FF;
+            color: white;
+            box-shadow: 20 4px 10px rgba(82, 0, 255, 0.2);
+        }
+
+        .submenu {
+            padding-left: 20px;
+            max-height: 5px;
+            overflow: hidden;
+            opacity: 0;
+            font-size:auto;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+        }
+
+        .submenu.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .dropdown-toggle.open::after {
+            transform: rotate(180deg);
+        }
+
+        .submenu::before {
+            content: '';
+            display: block;
+            border-bottom: 1px dotted #ccc;
+            margin-bottom: 5px;
+        }
+
+        .submenu.open::before {
+            display: none;
+        }
+
+        .logout {
+            padding: 15px 20px;
+            border-top: 1px solid #444;
+        }
+
+        .content {
+            margin-left: 250px; /* Sidebar width */
+            padding: 10px;
+            flex: 1;
+            background-color: white;
+            color: black;
+            margin-top: 60px; /* Margin to account for the height of the header */
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Add Dark Mode Styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        body.dark-mode .sidebar {
+            background-color: #1e1e1e;
+        }
+
+        body.dark-mode .menu a, body.dark-mode .submenu a {
+            color: #ffffff;
+        }
+
+        .content.shifted {
+            margin-left: 0;
+        }
+
+        .menu i {
+            margin-right: 10px;
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            background-color: #000F5A;
+            color: white;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+        }
+
+        .toggle-btn:hover {
+            background-color: #5200FF;
+        }
+
+        .floating-screen {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: none; /* Initially hidden */
+            z-index: 2000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column; /* Ensure header is at the top */
+        }
+
+        .floating-screen header {
+            background-color: #000F5A; /* Dark blue background */
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            border-bottom: 2px solid #ddd;
+        }
+
+
+        .floating-screen header button {
+            background: none;
+            border: none;
+            color: red;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .mic-button {
+            width: 80px;
+            height: 80px;
+            background-color: #000F5A;
+            color: white;
+            border-radius: 50%; /* Makes the button round */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            position: absolute;
+            bottom: 20px; /* Adjust as needed */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust for centering */
+        }
+
+        .mic-button:hover {
+            background-color: #0033A0;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-250px);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 250px;
+                z-index: 999; /* Ensure sidebar is below the header */
+            }
+
+            .sidebar.hidden {
+                transform: translateX(0);
+            }
+
+            .header {
+                left: 0; /* Header should align with the left edge on mobile */
+                width: 100%; /* Full width on mobile */
+                z-index: 1000; /* Ensure header is above the sidebar */
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .content {
+                margin-left: 0; /* No sidebar margin on mobile */
+                margin-top: 60px; /* Ensure content starts below the header */
+            }
+
+            .toggle-btn {
+                display: block; /* Show the toggle button on mobile */
+
+            }
+
+
+            .header .actions {
+                margin-top: 10px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .toggle-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="profile-info">
+
+        </div>
+        <div class="actions">
+            <button id="voice-assistant-toggle" title="Voice Assistant"><i class="bi bi-mic"></i></button>
+            <button title="Home" onclick="window.location.href='{% url 'pic_master' %}'"><i class="bi bi-house-door"></i></button>
+            <button id="dark-mode-toggle" title="Toggle Dark Mode"><i class="bi bi-moon"></i></button>
+            <button id="search-toggle" title="Search"><i class="bi bi-search"></i></button>
+            <button id="notification-toggle" title="Notifications"><i class="bi bi-bell"></i></button>
+
+
+        </div>
+    </header>
+
+    <button class="toggle-btn"><i class="bi bi-list"></i></button>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="{% static 'images/bitlogo.png' %}" alt="Bit Logo">
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="menu-search" class="form-control" placeholder="Search Menu ..">
+        </div>
+        <div class="menu">
+            <a href="#"><i class="bi bi-person-circle"></i>Profile</a>
+
+            <a href="#"><i class="bi bi-person-vcard-fill"></i>My Students</a>
+
+            <a href="#" class="dropdown-toggle"><i class="bi bi-calendar2-week-fill"></i>Leave Approval</a>
+            <div class="submenu">
+                <a href="#"><i class="bi bi-calendar4-week"></i>Leave Approve</a>
+                <a href="#"><i class="bi bi-qr-code"></i>QR code</a>
+            </div>
+
+            <a href="#"><i class="bi bi-border-style"></i>P-Skill Status</a>
+
+            <a href="#" ><i class="bi bi-calendar2-check"></i>Student Attendance </a>
+
+            <a href="#"><i class="bi bi-journal-text"></i>Student Academics</a>
+
+            <a href="#" ><i class="bi bi-person-rolodex"></i>Contacts</a>
+
+            <a href="#" class="dropdown-toggle"><i class="bi bi-x-octagon-fill"></i>Blocks</a>
+            <div class="submenu">
+                <a href="#"><i class="bi bi-person-fill-slash"></i>Block Reasons</a>
+                <a href="#"><i class="bi bi-check-square-fill"></i>Block Approval</a>
+
+            </div>
+
+        </div>
+
+        <div class="logout">
+            <a href="{% url 'logout' %}" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right"></i>Logout</a>
+        </div>
+    </div>
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <script>
+        document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const submenu = this.nextElementSibling;
+                submenu.classList.toggle('open');
+                this.classList.toggle('open');
+            });
+        });
+
+        document.querySelector('.toggle-btn').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+            document.querySelector('.content').classList.toggle('shifted');
+        });
+
+        document.getElementById('dark-mode-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        document.getElementById('search-toggle').addEventListener('click', function() {
+            document.querySelector('.search-bar').classList.toggle('open');
+        });
+
+        document.getElementById('notification-toggle').addEventListener('click', function() {
+            alert('Notifications panel is under development.');
+        });
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('menu-search');
+            const menuItems = document.querySelectorAll('.menu a, .submenu a');
+
+            function updateMenuDisplay(query) {
+                menuItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        item.style.display = '';
+                        let parent = item.closest('.submenu');
+                        while (parent) {
+                            parent.classList.add('open');
+                            parent = parent.parentElement.closest('.submenu');
+                        }
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                const visibleItems = Array.from(menuItems).filter(item => item.style.display !== 'none');
+                visibleItems.forEach(item => {
+                    let parent = item.closest('.submenu');
+                    while (parent) {
+                        parent.classList.add('open');
+                        parent = parent.parentElement.closest('.submenu');
+                    }
+                });
+
+                document.querySelectorAll('.menu > a').forEach(topItem => {
+                    const subItems = topItem.nextElementSibling;
+                    if (subItems && Array.from(subItems.querySelectorAll('a')).some(a => a.style.display !== 'none')) {
+                        topItem.style.display = '';
+                    } else {
+                        topItem.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                if (query) {
+                    updateMenuDisplay(query);
+                } else {
+                    menuItems.forEach(item => {
+                        item.style.display = '';
+                    });
+                    document.querySelectorAll('.submenu').forEach(submenu => {
+                        submenu.classList.remove('open');
+                    });
+                    document.querySelectorAll('.menu > a').forEach(topItem => {
+                        topItem.style.display = '';
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
